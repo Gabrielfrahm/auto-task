@@ -1,0 +1,43 @@
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
+    "module": "commonjs", /* Specify what module code is generated. */
+    "rootDir": "./src", /* Specify the root folder within your source files. */
+    "baseUrl": "./src",
+    "paths": {
+      "@domain/*": [
+        "domain/*"
+      ],
+      "@infra/*": [
+        "infra/*"
+      ],
+      "@application/*": [
+        "application/*"
+      ],
+      "@shared/*": [
+        "shared/*"
+      ],
+    },
+    "esModuleInterop": true, /* Emit additional JavaScript to ease support for importing CommonJS modules. This enables 'allowSyntheticDefaultImports' for type compatibility. */
+    // "preserveSymlinks": true,                         /* Disable resolving symlinks to their realpath. This correlates to the same flag in node. */
+    "forceConsistentCasingInFileNames": true, /* Ensure that casing is correct in imports. */
+    /* Type Checking */
+    "strict": true, /* Enable all strict type-checking options. */
+    // "noImplicitAny": true,                            /* Enable error reporting for expressions and declarations with an implied 'any' type. */
+    "strictNullChecks": false, /* When type checking, take into account 'null' and 'undefined'. */
+    /* Default catch clause variables as 'unknown' instead of 'any'. */
+    "alwaysStrict": true, /* Ensure 'use strict' is always emitted. */
+    /* Skip type checking .d.ts files that are included with TypeScript. */
+    "skipLibCheck": true /* Skip type checking all .d.ts files. */,
+    "declaration": true,
+    "removeComments": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "noImplicitAny": false,
+    "strictBindCallApply": false,
+    "noFallthroughCasesInSwitch": false,
+  }
+}

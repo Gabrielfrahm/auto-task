@@ -1,0 +1,37 @@
+{
+  "name": "task",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "lint:fix": "eslint . --ext .js,.jsx,.ts,.tsx --fix",
+    "generate": "npx drizzle-kit generate:pg --config=src/infra/orm/drizzle/drizzle.config.ts",
+    "migrate:run": "npx drizzle-kit push:pg --config=src/infra/orm/drizzle/drizzle.config.ts",
+    "migrate:rollback": "drizzle-kit drop --config=src/infra/orm/drizzle/drizzle.config.ts",
+    "studio": "npx drizzle-kit studio --config=src/infra/orm/drizzle/drizzle.config.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.11.16",
+    "@types/pg": "^8.11.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "drizzle-kit": "^0.20.14",
+    "eslint": "^8.56.0",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths-webpack-plugin": "^4.1.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.1",
+    "drizzle-orm": "^0.29.3",
+    "drizzle-zod": "^0.5.1",
+    "pg": "^8.11.3",
+    "postgres": "^3.4.3"
+  }
+}

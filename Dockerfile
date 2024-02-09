@@ -1,0 +1,37 @@
+# Etapa de Build
+FROM node:20-alpine as build
+
+# Define o diretório de trabalho no container para a etapa de build
+WORKDIR /usr/src/app
+
+# Copia os arquivos do package.json e package-lock.json (ou yarn.lock)
+COPY package*.json ./
+
+# Instala as dependências do projeto
+RUN npm install
+
+# Copia o restante dos arquivos do projeto para o diretório de trabalho no container
+COPY . .
+
+# Compila a aplicação para produção
+RUN npm run build --prefix src/infra/nestjs
+
+# Etapa de Runtime
+FROM node:20-alpine
+
+# Define o diretório de trabalho no container para a etapa de runtime
+WORKDIR /usr/src/app
+
+# Copia os artefatos do build para o diretório de trabalho do container de runtime
+COPY --from=build /usr/src/app/src/infra/nestjs/dist ./src/infra/nestjs/dist
+COPY --from=build /usr/src/app/package*.json ./
+COPY --from=build /usr/src/app/src/infra/nestjs/node_modules ./src/infra/nestjs/node_modules
+
+# Expõe a porta que o servidor NestJS vai usar
+EXPOSE 3333
+
+# Define o diretório de trabalho para o serviço NestJS
+WORKDIR /usr/src/app/src/infra/nestjs
+
+# O comando para iniciar a aplicação
+CMD ["node", "dist/main"]
