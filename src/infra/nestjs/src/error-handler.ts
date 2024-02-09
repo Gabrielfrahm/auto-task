@@ -11,6 +11,8 @@ export class EitherExceptionFilter implements ExceptionFilter {
   constructor(private readonly httpAdapterHost: HttpAdapterHost) {}
 
   catch(exception: any, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+
     const { httpAdapter } = this.httpAdapterHost;
 
     const error =
@@ -26,8 +28,6 @@ export class EitherExceptionFilter implements ExceptionFilter {
           ? error.code
           : HttpStatus.INTERNAL_SERVER_ERROR
         : HttpStatus.INTERNAL_SERVER_ERROR;
-
-    const ctx = host.switchToHttp();
 
     const responseBody = {
       statusCode: httpStatus,

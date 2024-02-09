@@ -2,6 +2,7 @@ import { HttpAdapterHost, NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { RequestMethod } from '@nestjs/common';
 import { EitherExceptionFilter } from './error-handler';
+import { CustomValidationPipe } from './class-validator.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -13,6 +14,8 @@ async function bootstrap() {
   const httpAdapterHost = app.get(HttpAdapterHost);
 
   app.useGlobalFilters(new EitherExceptionFilter(httpAdapterHost));
+
+  app.useGlobalPipes(new CustomValidationPipe());
   await app.listen(3333);
 }
 bootstrap();
