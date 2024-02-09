@@ -1,5 +1,5 @@
 {
-  "id": "61eb9eb3-a186-4791-bb35-76bafc1852e0",
+  "id": "bea18d58-803c-4761-bbe4-deaf26ee874b",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "version": "5",
   "dialect": "pg",
@@ -28,21 +28,20 @@
         },
         "start_date": {
           "name": "start_date",
-          "type": "text",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "default": "CURRENT_TIMESTAMP"
         },
         "finish_date": {
           "name": "finish_date",
-          "type": "text",
+          "type": "timestamp",
           "primaryKey": false,
-          "notNull": false,
-          "default": "CURRENT_TIMESTAMP"
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
-          "type": "text",
+          "type": "timestamp",
           "primaryKey": false,
           "notNull": false,
           "default": "CURRENT_TIMESTAMP"

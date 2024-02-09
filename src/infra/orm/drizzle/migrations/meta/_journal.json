@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "5",
-      "when": 1707312196443,
-      "tag": "0000_clammy_lizard",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1707389915479,
-      "tag": "0001_brainy_deathbird",
+      "when": 1707477977924,
+      "tag": "0000_nostalgic_wendell_rand",
       "breakpoints": true
     }
   ]

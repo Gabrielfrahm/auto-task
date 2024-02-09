@@ -1,5 +1,5 @@
-import { IsDateString, IsNotEmpty, IsOptional, IsString } from "class-validator";
-
+import { IsDate, IsNotEmpty, IsOptional, IsString, } from "class-validator";
+import {Transform} from "class-transformer";
 export class CreateTaskValidator {
 
   @IsString()
@@ -10,15 +10,18 @@ export class CreateTaskValidator {
   @IsNotEmpty()
   public description : string;
 
-  @IsDateString()
+  @Transform(({ value }) => new Date(value), { toClassOnly: true })
+  @IsDate()
   @IsOptional()
   public start_date?: Date;
 
-  @IsDateString()
+  @Transform(({ value }) => new Date(value), { toClassOnly: true })
+  @IsDate()
   @IsOptional()
   public finish_date?: Date;
 
-  @IsDateString()
+  @Transform(({ value }) => new Date(value), { toClassOnly: true })
+  @IsDate()
   @IsOptional()
   public created_at?: Date;
 }
