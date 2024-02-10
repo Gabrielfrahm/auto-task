@@ -6,6 +6,7 @@ import { PersistenceTask } from 'infra/adapters/drizzle/task/task-repository-ada
 import { CreateTaskUseCase } from '@application/usecases/task/create/create-task-use-case';
 import { TaskRepositoryPort } from '@domain/port/out/persistence/task/task-repository.port';
 import { ConfigModule } from '@nestjs/config';
+import { ListTaskUseCase } from '@application/usecases/task/list/list-task-use-case';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -27,6 +28,12 @@ import { ConfigModule } from '@nestjs/config';
       provide: CreateTaskUseCase,
       useFactory: (taskRepository: TaskRepositoryPort) =>
         new CreateTaskUseCase(taskRepository),
+      inject: ['taskRepositoryAdapter'],
+    },
+    {
+      provide: ListTaskUseCase,
+      useFactory: (taskRepository: TaskRepositoryPort) =>
+        new ListTaskUseCase(taskRepository),
       inject: ['taskRepositoryAdapter'],
     },
   ],

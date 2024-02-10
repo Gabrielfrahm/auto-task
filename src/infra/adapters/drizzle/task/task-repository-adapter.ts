@@ -1,6 +1,7 @@
-import { SearchUsersParams, TaskRepositoryPort } from "@domain/port/out/persistence/task/task-repository.port";
-import { Task } from "@domain/task/task";
+import { List, SearchTaskParams, TaskRepositoryPort } from "@domain/port/out/persistence/task/task-repository.port";
+import { Task, TaskProps } from "@domain/task/task";
 import { Either, left, right } from "@shared/either";
+import { and, count, desc, like } from "drizzle-orm";
 import { DrizzleConnection } from "infra/orm/drizzle/connection";
 import { tasks } from "infra/orm/drizzle/schemas/task";
 
@@ -13,7 +14,6 @@ export class PersistenceTask extends TaskRepositoryPort {
 
 	async create(entity: Task): Promise<Either<Error, Task>> {
 		try {
-
 			await this.drizzleConnection.db.transaction(async(tx) => {
 				await tx.insert(tasks).values({
 					id: entity.getId(),
@@ -32,9 +32,52 @@ export class PersistenceTask extends TaskRepositoryPort {
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	async findAll(params?: SearchUsersParams): Promise<Either<Error, Task[]>> {
-		throw new Error("Method not implemented.");
+
+
+	async findAll(params?: SearchTaskParams): Promise<Either<Error, List<Task>>> {
+		try {
+			const offset = ((params?.page ||  1) - 1)  * (params?.per_page ?? 10);
+			const limit = params?.per_page || 10;
+
+			const taskModel = await this.drizzleConnection.db.select()
+				.from(tasks)
+				.where(
+					and(
+						params?.name && like(tasks.name, `%${params.name}%`),
+						params?.description &&  like(tasks.description, `%${params.description}%`)
+					)
+				)
+				.limit(limit)
+				.offset(offset)
+				.orderBy(desc(tasks.created_at)).prepare().execute();
+
+			const totalTasksCountResult = await this.drizzleConnection.db.select({ value: count() })
+				.from(tasks)
+				.where(
+					and(
+						params?.name && like(tasks.name, `%${params.name}%`),
+						params?.description && like(tasks.description, `%${params.description}%`)
+					)
+				).prepare().execute();
+
+			const totalTasks = totalTasksCountResult[0].value || 0;
+			const totalPages = Math.ceil(totalTasks / limit);
+			const lastPage = Math.ceil(taskModel.length / limit);
+
+			return right({
+				data: taskModel.map((item: TaskProps) => Task.create(item)),
+				meta: {
+					total: totalTasks,
+					perPage:  limit,
+					lastPage,
+					totalPages
+				}
+			});
+
+		}catch(err) {
+			const error = err as {message:string};
+			return left(new Error(error.message));
+		}
 	}
 
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars

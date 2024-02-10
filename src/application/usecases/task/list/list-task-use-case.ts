@@ -1,25 +1,28 @@
-import { left, right } from "@shared/either";
 import { UseCase } from "@application/usecases/use-case.interface";
-import { CreateTaskCommand } from "./create-task-command";
-import { Task } from "@domain/task/task";
-import { CreateTaskOutput } from "./create-task-output";
+import { ListTaskCommand } from "./list-task-command";
+import { ListTaskOutput } from "./list-task-output";
 import { TaskRepositoryPort } from "@domain/port/out/persistence/task/task-repository.port";
+import { left, right } from "@shared/either";
 import { ApplicationException } from "@shared/errors/application.error";
 import { TaskPresenter } from "@application/presenter/task/task.presenter";
 
-export class CreateTaskUseCase implements UseCase<CreateTaskCommand, CreateTaskOutput> {
+export class ListTaskUseCase implements UseCase<ListTaskCommand, ListTaskOutput> {
 
 	public constructor(private readonly taskRepository : TaskRepositoryPort) {
 		this.taskRepository = taskRepository;
 	}
 
-	async execute(command: CreateTaskCommand): Promise<CreateTaskOutput> {
+	async execute(command: ListTaskCommand): Promise<ListTaskOutput> {
 		try {
-			const repositoryResult = await this.taskRepository.create(Task.create(command));
+			const repositoryResult = await this.taskRepository.findAll(command);
 			if(repositoryResult.isLeft()){
 				throw new Error(repositoryResult.value.message);
 			}
-			return right(TaskPresenter.ToPresenter(repositoryResult.value));
+			return right({
+				data: repositoryResult.value.data.map((item) => TaskPresenter.ToPresenter(item)),
+				meta: repositoryResult.value.meta
+			});
+
 		}catch(err){
 			return left(new ApplicationException(err["message"], 400));
 		}
