@@ -1,7 +1,8 @@
 import { List, SearchTaskParams, TaskRepositoryPort } from "@domain/port/out/persistence/task/task-repository.port";
 import { Task, TaskProps } from "@domain/task/task";
 import { Either, left, right } from "@shared/either";
-import { and, count, desc, like } from "drizzle-orm";
+import { InfraException } from "@shared/errors/infra.error";
+import { and, count, desc, eq, like } from "drizzle-orm";
 import { DrizzleConnection } from "infra/orm/drizzle/connection";
 import { tasks } from "infra/orm/drizzle/schemas/task";
 
@@ -28,7 +29,7 @@ export class PersistenceTask extends TaskRepositoryPort {
 			return right(entity);
 		}catch(err){
 			const error = err as {message:string};
-			return left(new Error(error.message));
+			return left(new InfraException(error.message, 400));
 		}
 	}
 
@@ -76,12 +77,25 @@ export class PersistenceTask extends TaskRepositoryPort {
 
 		}catch(err) {
 			const error = err as {message:string};
-			return left(new Error(error.message));
+			return left(new InfraException(error.message, 400));
 		}
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	async findByName(name: string): Promise<Either<Error, Task>> {
-		throw new Error("Method not implemented.");
+		try{
+			const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
+				(eq(tasks.name, name))
+			).prepare().execute();
+
+			if(taskModel.length <= 0){
+				return left(new InfraException("not found task", 404));
+			}
+
+
+			return right(Task.create(taskModel[0]));
+		}catch(err) {
+			const error = err as {message:string};
+			return left(new InfraException(error.message, 400));
+		}
 	}
 }
