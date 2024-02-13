@@ -8,6 +8,7 @@ import { tasks } from "infra/orm/drizzle/schemas/task";
 
 export class PersistenceTask extends TaskRepositoryPort {
 
+
 	constructor(private readonly drizzleConnection : DrizzleConnection){
 		super();
 		this.drizzleConnection = drizzleConnection;
@@ -95,6 +96,44 @@ export class PersistenceTask extends TaskRepositoryPort {
 			return right(Task.create(taskModel[0]));
 		}catch(err) {
 			const error = err as {message:string};
+			return left(new InfraException(error.message, 400));
+		}
+	}
+
+	async findById(id: string): Promise<Either<Error, Task>> {
+		try{
+			const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
+				(eq(tasks.id, id))
+			).prepare().execute();
+
+			if(taskModel.length <= 0){
+				return left(new InfraException("not found task", 404));
+			}
+
+			return right(Task.create(taskModel[0]));
+		}catch(err) {
+			const error = err as {message:string};
+			return left(new InfraException(error.message, 400));
+		}
+	}
+
+	async update(entity: Task): Promise<Either<Error, Task>>{
+		try{
+			await this.drizzleConnection.db.transaction(async(tx) => {
+				await tx.update(tasks)
+					.set({
+						name: entity.getName(),
+						description : entity.getDescription(),
+						start_date: new Date(entity.getStartDate()),
+						finish_date: entity.getFinishDate(),
+					})
+					.where(eq(tasks.id, entity.getId()))
+					.prepare().execute();
+			});
+			return right(entity);
+		}catch(err) {
+			const error = err as {message:string};
+			console.log("chegou aqui?", error.message);
 			return left(new InfraException(error.message, 400));
 		}
 	}

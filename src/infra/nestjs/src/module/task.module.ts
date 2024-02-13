@@ -7,7 +7,8 @@ import { CreateTaskUseCase } from '@application/usecases/task/create/create-task
 import { TaskRepositoryPort } from '@domain/port/out/persistence/task/task-repository.port';
 import { ConfigModule } from '@nestjs/config';
 import { ListTaskUseCase } from '@application/usecases/task/list/list-task-use-case';
-import { GetTaskUseCase } from '@application/usecases/task/get/get-tas-use-case';
+import { GetTaskUseCase } from '@application/usecases/task/get/get-task-use-case';
+import { UpdateTaskUseCase } from '@application/usecases/task/update/update-task-use-case';
 
 @Module({
   imports: [ConfigModule.forRoot({ isGlobal: true })],
@@ -41,6 +42,12 @@ import { GetTaskUseCase } from '@application/usecases/task/get/get-tas-use-case'
       provide: GetTaskUseCase,
       useFactory: (taskRepository: TaskRepositoryPort) =>
         new GetTaskUseCase(taskRepository),
+      inject: ['taskRepositoryAdapter'],
+    },
+    {
+      provide: UpdateTaskUseCase,
+      useFactory: (taskRepository: TaskRepositoryPort) =>
+        new UpdateTaskUseCase(taskRepository),
       inject: ['taskRepositoryAdapter'],
     },
   ],

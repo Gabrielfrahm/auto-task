@@ -10,12 +10,12 @@ export type TaskProps = {
 }
 
 export class Task {
-	private readonly id?: string;
-	private readonly name: string;
-	private readonly description: string;
-	private readonly start_date: Date;
-	private readonly finish_date: Date;
-	private readonly created_at: Date;
+	private id?: string;
+	private name: string;
+	private description: string;
+	private start_date: Date;
+	private finish_date: Date;
+	private created_at: Date;
 
 	private constructor(props : TaskProps){
 		this.id = props.id || randomUUID();
@@ -28,6 +28,24 @@ export class Task {
 
 	public static create(props: TaskProps): Task {
 		return new Task(props);
+	}
+
+	public update(props: Partial<TaskProps>) : void {
+		if(props.name) {
+			this.name = props.name;
+		}
+
+		if(props.description){
+			this.description = props.description;
+		}
+
+		if(props.start_date){
+			this.start_date = props.start_date;
+		}
+
+		if(props.finish_date){
+			this.finish_date = props.finish_date;
+		}
 	}
 
 	public getId(): string {

@@ -25,4 +25,6 @@ export abstract class TaskRepositoryPort implements Repository<Task> {
   abstract create(entity: Task): Promise<Either<Error, Task>>;
   abstract findAll(params?:SearchTaskParams): Promise<Either<Error, List<Task>>>;
   abstract findByName(name: string): Promise<Either<Error, Task>>;
+  abstract findById(id: string): Promise<Either<Error, Task>>
+  abstract update(entity: Task): Promise<Either<Error, Task>>
 }
