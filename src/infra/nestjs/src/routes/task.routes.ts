@@ -12,10 +12,9 @@ import { ListTaskUseCase } from '@application/usecases/task/list/list-task-use-c
 import { GetTaskUseCase } from '@application/usecases/task/get/get-task-use-case';
 import { UpdateTaskUseCase } from '@application/usecases/task/update/update-task-use-case';
 
-import {
-  CreateTaskValidator,
-  UpdateTaskValidator,
-} from '@infra/adapters/validator/task.validator';
+import { CreateTaskValidator } from '@infra/adapters/validator/task/create-task.validator';
+import { UpdateTaskValidator } from '@infra/adapters/validator/task/update-task.validator';
+
 import { SearchTaskParams } from '@domain/port/out/persistence/task/task-repository.port';
 
 @Controller('tasks')
@@ -49,7 +48,7 @@ export class TaskRoute {
   async findTaskByName(@Param('name') name: string) {
     const output = await this.getTaskUseCase.execute({ name });
     if (output.isLeft()) {
-      throw new Error(output.value.message);
+      throw output.value;
     }
     return output.value;
   }
@@ -57,7 +56,7 @@ export class TaskRoute {
   @Patch('/:id')
   async updateTaskByName(
     @Param('id') id: string,
-    @Body() data: Omit<UpdateTaskValidator, 'id'>,
+    @Body() data: UpdateTaskValidator,
   ) {
     const output = await this.updateTaskUseCase.execute({
       id: id,
@@ -68,7 +67,7 @@ export class TaskRoute {
     });
 
     if (output.isLeft()) {
-      throw new Error(output.value.message);
+      throw output.value;
     }
 
     return output.value;

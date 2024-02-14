@@ -3,12 +3,12 @@ import { Task, TaskProps } from "@domain/task/task";
 import { Either, left, right } from "@shared/either";
 import { InfraException } from "@shared/errors/infra.error";
 import { and, count, desc, eq, like } from "drizzle-orm";
+
 import { DrizzleConnection } from "infra/orm/drizzle/connection";
 import { tasks } from "infra/orm/drizzle/schemas/task";
 
+
 export class PersistenceTask extends TaskRepositoryPort {
-
-
 	constructor(private readonly drizzleConnection : DrizzleConnection){
 		super();
 		this.drizzleConnection = drizzleConnection;
@@ -16,7 +16,16 @@ export class PersistenceTask extends TaskRepositoryPort {
 
 	async create(entity: Task): Promise<Either<Error, Task>> {
 		try {
+			const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
+				(eq(tasks.name, entity.getName()))
+			).prepare("check-task").execute();
+
+			if(taskModel.length > 0){
+				return left(new InfraException("task already existing", 404));
+			}
+
 			await this.drizzleConnection.db.transaction(async(tx) => {
+
 				await tx.insert(tasks).values({
 					id: entity.getId(),
 					name: entity.getName(),
@@ -24,13 +33,18 @@ export class PersistenceTask extends TaskRepositoryPort {
 					start_date: entity.getStartDate(),
 					finish_date: entity.getFinishDate(),
 					created_at: entity.getCreatedAt()
-				}).prepare().execute();
+				}).prepare("create-task").execute();
 			});
 
 			return right(entity);
 		}catch(err){
-			const error = err as {message:string};
-			return left(new InfraException(error.message, 400));
+			if (err instanceof InfraException) {
+
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new InfraException(error.message, 400));
+			}
 		}
 	}
 
@@ -51,7 +65,7 @@ export class PersistenceTask extends TaskRepositoryPort {
 				)
 				.limit(limit)
 				.offset(offset)
-				.orderBy(desc(tasks.created_at)).prepare().execute();
+				.orderBy(desc(tasks.created_at)).prepare("find-all-task").execute();
 
 			const totalTasksCountResult = await this.drizzleConnection.db.select({ value: count() })
 				.from(tasks)
@@ -60,7 +74,7 @@ export class PersistenceTask extends TaskRepositoryPort {
 						params?.name && like(tasks.name, `%${params.name}%`),
 						params?.description && like(tasks.description, `%${params.description}%`)
 					)
-				).prepare().execute();
+				).prepare("count-task").execute();
 
 			const totalTasks = totalTasksCountResult[0].value || 0;
 			const totalPages = Math.ceil(totalTasks / limit);
@@ -77,26 +91,30 @@ export class PersistenceTask extends TaskRepositoryPort {
 			});
 
 		}catch(err) {
-			const error = err as {message:string};
-			return left(new InfraException(error.message, 400));
+			if (err instanceof InfraException) {
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new InfraException(error.message, 400));
+			}
 		}
 	}
 
 	async findByName(name: string): Promise<Either<Error, Task>> {
 		try{
-			const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
-				(eq(tasks.name, name))
-			).prepare().execute();
-
-			if(taskModel.length <= 0){
-				return left(new InfraException("not found task", 404));
+			const taskModel = await this.getTaskByName(name);
+			if(taskModel.isLeft()) {
+				throw taskModel.value;
 			}
 
-
-			return right(Task.create(taskModel[0]));
+			return right(taskModel.value);
 		}catch(err) {
-			const error = err as {message:string};
-			return left(new InfraException(error.message, 400));
+			if (err instanceof InfraException) {
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new InfraException(error.message, 400));
+			}
 		}
 	}
 
@@ -104,7 +122,7 @@ export class PersistenceTask extends TaskRepositoryPort {
 		try{
 			const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
 				(eq(tasks.id, id))
-			).prepare().execute();
+			).prepare("check-task").execute();
 
 			if(taskModel.length <= 0){
 				return left(new InfraException("not found task", 404));
@@ -112,8 +130,12 @@ export class PersistenceTask extends TaskRepositoryPort {
 
 			return right(Task.create(taskModel[0]));
 		}catch(err) {
-			const error = err as {message:string};
-			return left(new InfraException(error.message, 400));
+			if (err instanceof InfraException) {
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new InfraException(error.message, 400));
+			}
 		}
 	}
 
@@ -124,17 +146,32 @@ export class PersistenceTask extends TaskRepositoryPort {
 					.set({
 						name: entity.getName(),
 						description : entity.getDescription(),
-						start_date: new Date(entity.getStartDate()),
+						start_date: entity.getStartDate(),
 						finish_date: entity.getFinishDate(),
 					})
 					.where(eq(tasks.id, entity.getId()))
-					.prepare().execute();
+					.prepare("update-task").execute();
 			});
 			return right(entity);
 		}catch(err) {
-			const error = err as {message:string};
-			console.log("chegou aqui?", error.message);
-			return left(new InfraException(error.message, 400));
+			if (err instanceof InfraException) {
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new InfraException(error.message, 400));
+			}
 		}
+	}
+
+	private async getTaskByName(name : string) : Promise<Either<Error,Task>>{
+		const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
+			(eq(tasks.name, name))
+		).prepare("getTaskByName").execute();
+
+		if(taskModel.length <= 0){
+			return left(new InfraException("not found task", 404));
+		}
+
+		return right(Task.create(taskModel[0]));
 	}
 }

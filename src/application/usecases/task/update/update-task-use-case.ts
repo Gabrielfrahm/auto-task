@@ -5,6 +5,7 @@ import { TaskRepositoryPort } from "@domain/port/out/persistence/task/task-repos
 import { left, right } from "@shared/either";
 import { ApplicationException } from "@shared/errors/application.error";
 import { TaskPresenter } from "@application/presenter/task/task.presenter";
+import { InfraException } from "@shared/errors/infra.error";
 
 export class UpdateTaskUseCase implements UseCase<UpdateTaskCommand, UpdateTaskOutput> {
 	constructor(private readonly taskRepository: TaskRepositoryPort){
@@ -13,9 +14,11 @@ export class UpdateTaskUseCase implements UseCase<UpdateTaskCommand, UpdateTaskO
 
 	async execute(command: UpdateTaskCommand): Promise<UpdateTaskOutput> {
 		try{
+			console.log(typeof command.finish_date);
 			const task = await this.taskRepository.findById(command.id);
+
 			if(task.isLeft()){
-				throw new Error(task.value.message);
+				throw task.value;
 			}
 
 			task.value.update(command);
@@ -23,12 +26,17 @@ export class UpdateTaskUseCase implements UseCase<UpdateTaskCommand, UpdateTaskO
 			const updatedTask = await this.taskRepository.update(task.value);
 
 			if(updatedTask.isLeft()){
-				throw new Error(updatedTask.value.message);
+				throw updatedTask.value;
 			}
 
 			return right(TaskPresenter.ToPresenter(task.value));
 		}catch(err) {
-			return left(new ApplicationException(err["message"], 400));
+			if (err instanceof InfraException) {
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new ApplicationException(error.message, 400));
+			}
 		}
 	}
 }

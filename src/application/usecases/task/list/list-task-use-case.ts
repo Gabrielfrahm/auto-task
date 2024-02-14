@@ -5,6 +5,7 @@ import { TaskRepositoryPort } from "@domain/port/out/persistence/task/task-repos
 import { left, right } from "@shared/either";
 import { ApplicationException } from "@shared/errors/application.error";
 import { TaskPresenter } from "@application/presenter/task/task.presenter";
+import { InfraException } from "@shared/errors/infra.error";
 
 export class ListTaskUseCase implements UseCase<ListTaskCommand, ListTaskOutput> {
 
@@ -24,7 +25,12 @@ export class ListTaskUseCase implements UseCase<ListTaskCommand, ListTaskOutput>
 			});
 
 		}catch(err){
-			return left(new ApplicationException(err["message"], 400));
+			if (err instanceof InfraException) {
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new ApplicationException(error.message, 400));
+			}
 		}
 	}
 }

@@ -14,7 +14,6 @@ export class EitherExceptionFilter implements ExceptionFilter {
     const ctx = host.switchToHttp();
 
     const { httpAdapter } = this.httpAdapterHost;
-
     const error =
       exception instanceof Error
         ? exception.message.includes('body')
@@ -36,7 +35,9 @@ export class EitherExceptionFilter implements ExceptionFilter {
       message:
         exception instanceof Error
           ? exception.message.includes('body')
-            ? JSON.parse(error.body.message)
+            ? error.body.message.includes('code')
+              ? JSON.parse(error.body.message)
+              : error.body.message
             : exception.message
           : exception,
     };

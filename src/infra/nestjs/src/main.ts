@@ -16,6 +16,7 @@ async function bootstrap() {
   app.useGlobalFilters(new EitherExceptionFilter(httpAdapterHost));
 
   app.useGlobalPipes(new CustomValidationPipe());
+
   await app.listen(3333);
 }
 bootstrap();

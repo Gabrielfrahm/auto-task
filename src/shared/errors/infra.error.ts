@@ -1,6 +1,5 @@
 export class InfraException extends Error {
 	constructor(message: string, status: number) {
-
 		const bodyError = {
 			code: status,
 			body: {

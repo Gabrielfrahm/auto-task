@@ -5,13 +5,12 @@ import { TaskRoute } from '../routes/task.routes';
 import { PersistenceTask } from 'infra/adapters/drizzle/task/task-repository-adapter';
 import { CreateTaskUseCase } from '@application/usecases/task/create/create-task-use-case';
 import { TaskRepositoryPort } from '@domain/port/out/persistence/task/task-repository.port';
-import { ConfigModule } from '@nestjs/config';
 import { ListTaskUseCase } from '@application/usecases/task/list/list-task-use-case';
 import { GetTaskUseCase } from '@application/usecases/task/get/get-task-use-case';
 import { UpdateTaskUseCase } from '@application/usecases/task/update/update-task-use-case';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true })],
+  imports: [],
   controllers: [TaskRoute],
   providers: [
     {

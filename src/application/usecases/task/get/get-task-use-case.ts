@@ -5,6 +5,7 @@ import { TaskRepositoryPort } from "@domain/port/out/persistence/task/task-repos
 import { left, right } from "@shared/either";
 import { TaskPresenter } from "@application/presenter/task/task.presenter";
 import { ApplicationException } from "@shared/errors/application.error";
+import { InfraException } from "@shared/errors/infra.error";
 
 export class GetTaskUseCase implements UseCase<GetTaskCommand, GetTaskOutput> {
 
@@ -16,11 +17,17 @@ export class GetTaskUseCase implements UseCase<GetTaskCommand, GetTaskOutput> {
 		try {
 			const repositoryResult = await this.taskRepository.findByName(command.name);
 			if(repositoryResult.isLeft()){
+
 				throw new Error(repositoryResult.value.message);
 			}
 			return right(TaskPresenter.ToPresenter(repositoryResult.value));
 		}catch(err){
-			return left(new ApplicationException(err["message"], 400));
+			if (err instanceof InfraException) {
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new ApplicationException(error.message, 400));
+			}
 		}
 	}
 
