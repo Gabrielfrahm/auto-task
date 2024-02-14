@@ -16,14 +16,10 @@ export class PersistenceTask extends TaskRepositoryPort {
 
 	async create(entity: Task): Promise<Either<Error, Task>> {
 		try {
-			const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
-				(eq(tasks.name, entity.getName()))
-			).prepare("check-task").execute();
-
-			if(taskModel.length > 0){
-				return left(new InfraException("task already existing", 404));
+			const checkTask = await this.checkTaskNameAlreadyExiste(entity.getName());
+			if(checkTask.isLeft()){
+				throw checkTask.value;
 			}
-
 			await this.drizzleConnection.db.transaction(async(tx) => {
 
 				await tx.insert(tasks).values({
@@ -141,6 +137,10 @@ export class PersistenceTask extends TaskRepositoryPort {
 
 	async update(entity: Task): Promise<Either<Error, Task>>{
 		try{
+			const checkTask = await this.checkTaskNameAlreadyExiste(entity.getName(), entity.getId());
+			if(checkTask.isLeft()){
+				throw checkTask.value;
+			}
 			await this.drizzleConnection.db.transaction(async(tx) => {
 				await tx.update(tasks)
 					.set({
@@ -166,12 +166,30 @@ export class PersistenceTask extends TaskRepositoryPort {
 	private async getTaskByName(name : string) : Promise<Either<Error,Task>>{
 		const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
 			(eq(tasks.name, name))
-		).prepare("getTaskByName").execute();
+		).prepare("get-task-by-name").execute();
 
 		if(taskModel.length <= 0){
 			return left(new InfraException("not found task", 404));
 		}
 
 		return right(Task.create(taskModel[0]));
+	}
+
+	private async checkTaskNameAlreadyExiste(name: string, id?: string): Promise<Either<Error, null>> {
+		const taskModel = await this.drizzleConnection.db.select().from(tasks).where(
+			(eq(tasks.name, name))
+		).prepare("check-task-already-existe").execute();
+
+		if(id) {
+			if(taskModel.length > 0 && taskModel[0].id === id) {
+				return left(new InfraException("task already existing", 404));
+			}
+		}
+
+		if(taskModel.length > 0){
+			return left(new InfraException("task already existing", 404));
+		}
+
+		return right(null);
 	}
 }

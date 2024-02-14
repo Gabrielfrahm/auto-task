@@ -14,7 +14,6 @@ export class UpdateTaskUseCase implements UseCase<UpdateTaskCommand, UpdateTaskO
 
 	async execute(command: UpdateTaskCommand): Promise<UpdateTaskOutput> {
 		try{
-			console.log(typeof command.finish_date);
 			const task = await this.taskRepository.findById(command.id);
 
 			if(task.isLeft()){
