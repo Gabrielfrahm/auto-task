@@ -2,13 +2,14 @@ import { List, SearchTaskParams, TaskRepositoryPort } from "@domain/port/out/per
 import { Task, TaskProps } from "@domain/task/task";
 import { Either, left, right } from "@shared/either";
 import { InfraException } from "@shared/errors/infra.error";
-import { and, count, desc, eq, like } from "drizzle-orm";
+import { and, count, desc, eq, like, sql } from "drizzle-orm";
 
 import { DrizzleConnection } from "infra/orm/drizzle/connection";
 import { tasks } from "infra/orm/drizzle/schemas/task";
 
 
 export class PersistenceTask extends TaskRepositoryPort {
+
 	constructor(private readonly drizzleConnection : DrizzleConnection){
 		super();
 		this.drizzleConnection = drizzleConnection;
@@ -154,6 +155,26 @@ export class PersistenceTask extends TaskRepositoryPort {
 			});
 			return right(entity);
 		}catch(err) {
+			if (err instanceof InfraException) {
+				return left(err);
+			} else {
+				const error = err as { message: string };
+				return left(new InfraException(error.message, 400));
+			}
+		}
+	}
+
+	async findAllByDate(date: Date): Promise<Either<Error, Task[]>> {
+		try {
+			const taskModel = await this.drizzleConnection.db.select()
+				.from(tasks)
+				.where(sql`DATE(start_date) = ${date}`)
+				.orderBy(desc(tasks.created_at)).prepare("find-all-task").execute();
+
+			return right(taskModel.map((item: TaskProps) => Task.create(item)));
+
+		}catch(err){
+
 			if (err instanceof InfraException) {
 				return left(err);
 			} else {

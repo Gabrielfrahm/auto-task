@@ -6,16 +6,20 @@ import {
   Patch,
   Post,
   Query,
+  Res,
 } from '@nestjs/common';
 import { CreateTaskUseCase } from '@application/usecases/task/create/create-task-use-case';
 import { ListTaskUseCase } from '@application/usecases/task/list/list-task-use-case';
 import { GetTaskUseCase } from '@application/usecases/task/get/get-task-use-case';
 import { UpdateTaskUseCase } from '@application/usecases/task/update/update-task-use-case';
+import { GeneratePdfUseCase } from '@application/usecases/task/generate-pdf/generate-pdf-use-case';
 
 import { CreateTaskValidator } from '@infra/adapters/validator/task/create-task.validator';
 import { UpdateTaskValidator } from '@infra/adapters/validator/task/update-task.validator';
+import { GeneratePdfValidator } from '@infra/adapters/validator/task/generate-pdf.validator';
 
 import { SearchTaskParams } from '@domain/port/out/persistence/task/task-repository.port';
+import { Response } from 'express';
 
 @Controller('tasks')
 export class TaskRoute {
@@ -24,6 +28,7 @@ export class TaskRoute {
     private readonly listTaskUseCase: ListTaskUseCase,
     private readonly getTaskUseCase: GetTaskUseCase,
     private readonly updateTaskUseCase: UpdateTaskUseCase,
+    private readonly generatePdfUseCase: GeneratePdfUseCase,
   ) {}
 
   @Post('/')
@@ -71,5 +76,20 @@ export class TaskRoute {
     }
 
     return output.value;
+  }
+
+  @Get('/generate/pdf')
+  async generatePdf(@Body() date: GeneratePdfValidator, @Res() res: Response) {
+    const output = await this.generatePdfUseCase.execute(date);
+
+    if (output.isLeft()) {
+      throw output.value;
+    }
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="your-pdf-name.pdf"',
+    );
+    res.send(Buffer.from(output.value as Buffer));
   }
 }
