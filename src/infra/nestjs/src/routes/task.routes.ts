@@ -16,7 +16,6 @@ import { GeneratePdfUseCase } from '@application/usecases/task/generate-pdf/gene
 
 import { CreateTaskValidator } from '@infra/adapters/validator/task/create-task.validator';
 import { UpdateTaskValidator } from '@infra/adapters/validator/task/update-task.validator';
-import { GeneratePdfValidator } from '@infra/adapters/validator/task/generate-pdf.validator';
 
 import { SearchTaskParams } from '@domain/port/out/persistence/task/task-repository.port';
 import { Response } from 'express';
@@ -78,18 +77,23 @@ export class TaskRoute {
     return output.value;
   }
 
-  @Get('/generate/pdf')
-  async generatePdf(@Body() date: GeneratePdfValidator, @Res() res: Response) {
-    const output = await this.generatePdfUseCase.execute(date);
+  @Get('/generate/pdf/:date')
+  async generatePdf(@Param('date') date: string, @Res() res: Response) {
+    console.log(date);
+    const output = await this.generatePdfUseCase.execute({
+      date: new Date(date),
+    });
 
     if (output.isLeft()) {
       throw output.value;
     }
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
       'attachment; filename="your-pdf-name.pdf"',
     );
-    res.send(Buffer.from(output.value as Buffer));
+
+    res.send(Buffer.from(output.value));
   }
 }

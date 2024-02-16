@@ -1,3 +1,3 @@
 import { Either } from "@shared/either";
 
-export type GeneratePdfOutput = Either<Error, unknown>;
+export type GeneratePdfOutput = Either<Error, ArrayBuffer>;

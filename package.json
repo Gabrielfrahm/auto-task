@@ -28,6 +28,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@ironsoftware/ironpdf": "^2024.1.1",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "date-fns": "^3.3.1",
@@ -35,6 +36,7 @@
     "drizzle-orm": "^0.29.3",
     "drizzle-zod": "^0.5.1",
     "jspdf": "^2.5.1",
+    "jspdf-autotable": "^3.8.2",
     "pg": "^8.11.3",
     "postgres": "^3.4.3"
   }

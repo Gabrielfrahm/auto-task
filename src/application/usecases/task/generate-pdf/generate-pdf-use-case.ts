@@ -27,7 +27,11 @@ export class GeneratePdfUseCase implements UseCase<GeneratePdfCommand, GenerateP
 
 			const pdfBuffer = await this.pdfService.createPdf(tasks.value);
 
-			return right(pdfBuffer);
+			if(pdfBuffer.isLeft()){
+				throw pdfBuffer.value;
+			}
+
+			return right(pdfBuffer.value);
 		}catch(err) {
 			if (err instanceof InfraException) {
 				return left(err);
