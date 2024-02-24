@@ -9,6 +9,7 @@ export type SearchTaskParams = {
   sort_dir?: string;
   name?: string;
   description?: string;
+  start_at?: string;
 }
 
 export type List<E> = {

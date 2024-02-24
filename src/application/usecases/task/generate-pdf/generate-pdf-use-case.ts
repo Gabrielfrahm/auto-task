@@ -6,6 +6,7 @@ import { InfraException } from "@shared/errors/infra.error";
 import { left, right } from "@shared/either";
 import { ApplicationException } from "@shared/errors/application.error";
 import { PdfPort } from "@domain/port/out/pdf/pdf.port";
+import { TaskPresenter } from "@application/presenter/task/task.presenter";
 
 
 export class GeneratePdfUseCase implements UseCase<GeneratePdfCommand, GeneratePdfOutput>{
@@ -25,7 +26,7 @@ export class GeneratePdfUseCase implements UseCase<GeneratePdfCommand, GenerateP
 				throw tasks.value;
 			}
 
-			const pdfBuffer = await this.pdfService.createPdf(tasks.value);
+			const pdfBuffer = await this.pdfService.createPdf(tasks.value.map((task) => TaskPresenter.ToPresenter(task)));
 
 			if(pdfBuffer.isLeft()){
 				throw pdfBuffer.value;

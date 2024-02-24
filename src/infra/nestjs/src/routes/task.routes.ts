@@ -91,7 +91,7 @@ export class TaskRoute {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      'attachment; filename="your-pdf-name.pdf"',
+      `attachment; filename="relatorio-${date}-.pdf"`,
     );
 
     res.send(Buffer.from(output.value));

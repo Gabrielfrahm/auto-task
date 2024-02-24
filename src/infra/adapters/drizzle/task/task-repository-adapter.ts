@@ -2,6 +2,7 @@ import { List, SearchTaskParams, TaskRepositoryPort } from "@domain/port/out/per
 import { Task, TaskProps } from "@domain/task/task";
 import { Either, left, right } from "@shared/either";
 import { InfraException } from "@shared/errors/infra.error";
+
 import { and, count, desc, eq, like, sql } from "drizzle-orm";
 
 import { DrizzleConnection } from "infra/orm/drizzle/connection";
@@ -46,18 +47,20 @@ export class PersistenceTask extends TaskRepositoryPort {
 	}
 
 
-
 	async findAll(params?: SearchTaskParams): Promise<Either<Error, List<Task>>> {
+		console.log(params);
 		try {
 			const offset = ((params?.page ||  1) - 1)  * (params?.per_page ?? 10);
 			const limit = params?.per_page || 10;
-
+			console.log(params.start_at);
 			const taskModel = await this.drizzleConnection.db.select()
 				.from(tasks)
 				.where(
 					and(
 						params?.name && like(tasks.name, `%${params.name}%`),
-						params?.description &&  like(tasks.description, `%${params.description}%`)
+						params?.description &&  like(tasks.description, `%${params.description}%`),
+						// params?.created_at &&  (sql`DATE(start_date) = ${params.created_at}`)
+						params?.start_at &&  (sql`DATE(tasks.start_date - INTERVAL '3 hours') = ${params.start_at}`)
 					)
 				)
 				.limit(limit)
@@ -69,16 +72,29 @@ export class PersistenceTask extends TaskRepositoryPort {
 				.where(
 					and(
 						params?.name && like(tasks.name, `%${params.name}%`),
-						params?.description && like(tasks.description, `%${params.description}%`)
+						params?.description && like(tasks.description, `%${params.description}%`),
+						// params?.created_at &&  (sql`DATE(start_date) = ${params.created_at}`)
+						params?.start_at &&  (sql`DATE(tasks.start_date - INTERVAL '3 hours') = ${params.start_at}`)
 					)
 				).prepare("count-task").execute();
+
 
 			const totalTasks = totalTasksCountResult[0].value || 0;
 			const totalPages = Math.ceil(totalTasks / limit);
 			const lastPage = Math.ceil(taskModel.length / limit);
 
 			return right({
-				data: taskModel.map((item: TaskProps) => Task.create(item)),
+				data: taskModel.map((item: TaskProps) => {
+
+					console.log(new Intl.DateTimeFormat(
+						"pt-BR", {
+							timeZone: "America/Sao_Paulo",
+							dateStyle: "short",
+							timeStyle: "medium"
+						}).format(item.start_date));
+
+					return Task.create({...item});
+				}),
 				meta: {
 					total: totalTasks,
 					perPage:  limit,
@@ -168,8 +184,8 @@ export class PersistenceTask extends TaskRepositoryPort {
 		try {
 			const taskModel = await this.drizzleConnection.db.select()
 				.from(tasks)
-				.where(sql`DATE(start_date) = ${date}`)
-				.orderBy(desc(tasks.created_at)).prepare("find-all-task").execute();
+				.where(sql`DATE(tasks.start_date - INTERVAL '3 hours') = ${date}`)
+				.orderBy(desc(tasks.created_at)).prepare("find-all-by-date").execute();
 
 			return right(taskModel.map((item: TaskProps) => Task.create(item)));
 
