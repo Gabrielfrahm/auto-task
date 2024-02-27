@@ -218,12 +218,12 @@ export class PersistenceTask extends TaskRepositoryPort {
 		).prepare("check-task-already-existe").execute();
 
 		if(id) {
-			if(taskModel.length > 0 && taskModel[0].id === id) {
+			if(taskModel.length > 0 && taskModel[0].id !== id) {
 				return left(new InfraException("task already existing", 404));
 			}
 		}
 
-		if(taskModel.length > 0){
+		if(!id && taskModel.length > 0){
 			return left(new InfraException("task already existing", 404));
 		}
 
